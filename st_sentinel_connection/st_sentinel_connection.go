@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/DivPro/sentinel_tunnel/st_logger"
 	"net"
 	"strconv"
 	"time"
@@ -71,15 +72,30 @@ func (c *Sentinel_connection) parseResponse() (request []string, err error, is_c
 }
 
 func (c *Sentinel_connection) getMasterAddrByNameFromSentinel(db_name string) (addr []string, returned_err error, is_client_closed bool) {
-	c.writer.WriteString("*3\r\n")
-	c.writer.WriteString("$8\r\n")
-	c.writer.WriteString("sentinel\r\n")
-	c.writer.WriteString("$23\r\n")
-	c.writer.WriteString("get-master-addr-by-name\r\n")
-	c.writer.WriteString(fmt.Sprintf("$%d\r\n", len(db_name)))
-	c.writer.WriteString(db_name)
-	c.writer.WriteString("\r\n")
-	c.writer.Flush()
+	strs := []string{
+		"*3\r\n",
+		"$8\r\n",
+		"sentinel\r\n",
+		"$23\r\n",
+		"get-master-addr-by-name\r\n",
+		fmt.Sprintf("$%d\r\n", len(db_name)),
+		db_name,
+		"\r\n",
+	}
+	for _, s := range strs {
+		cnt, err := c.writer.WriteString(s)
+		if err != nil {
+			st_logger.WriteLogMessage(st_logger.ERROR, "write to sentinel error", err.Error())
+			return nil, err, true
+		}
+		st_logger.WriteLogMessage(st_logger.DEBUG, "write to sentinel success", strconv.Itoa(cnt))
+	}
+	err := c.writer.Flush()
+	if err != nil {
+		st_logger.WriteLogMessage(st_logger.ERROR, "flush sentinel writer error", err.Error())
+
+		return nil, err, true
+	}
 
 	return c.parseResponse()
 }
@@ -144,8 +160,8 @@ func NewSentinelConnection(addresses []string) (*Sentinel_connection, error) {
 		get_master_address_by_name:       make(chan string),
 		get_master_address_by_name_reply: make(chan *Get_master_addr_reply),
 		current_sentinel_connection:      nil,
-		reader: nil,
-		writer: nil,
+		reader:                           nil,
+		writer:                           nil,
 	}
 
 	if !connection.reconnectToSentinel() {

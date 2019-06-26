@@ -4,12 +4,13 @@ import (
 	// "bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/RedisLabs/sentinel_tunnel/st_logger"
-	"github.com/RedisLabs/sentinel_tunnel/st_sentinel_connection"
+	"github.com/DivPro/sentinel_tunnel/st_logger"
+	"github.com/DivPro/sentinel_tunnel/st_sentinel_connection"
 	"io"
 	"io/ioutil"
 	"net"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -57,9 +58,13 @@ func NewSentinelTunnellingClient(config_file_location string) *SentinelTunnellin
 }
 
 func createTunnelling(conn1 net.Conn, conn2 net.Conn) {
-	io.Copy(conn1, conn2)
-	conn1.Close()
-	conn2.Close()
+	defer conn1.Close()
+	defer conn2.Close()
+	cnt, err := io.Copy(conn1, conn2)
+	if err != nil {
+		st_logger.WriteLogMessage(st_logger.ERROR, "cannot copy stream: ", err.Error())
+	}
+	st_logger.WriteLogMessage(st_logger.DEBUG, "stream copied: ", strconv.FormatInt(cnt, 10))
 }
 
 func handleConnection(c net.Conn, db_name string,
@@ -71,6 +76,7 @@ func handleConnection(c net.Conn, db_name string,
 		c.Close()
 		return
 	}
+	st_logger.WriteLogMessage(st_logger.DEBUG, "address: ", db_address)
 	db_conn, err := net.Dial("tcp", db_address)
 	if err != nil {
 		st_logger.WriteLogMessage(st_logger.ERROR, "cannot connect to db ", db_name,
