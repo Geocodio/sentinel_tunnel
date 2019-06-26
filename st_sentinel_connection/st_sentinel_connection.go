@@ -104,7 +104,7 @@ func (c *Sentinel_connection) retrieveAddressByDbName() {
 	for db_name := range c.get_master_address_by_name {
 		addr, err, is_client_closed := c.getMasterAddrByNameFromSentinel(db_name)
 		if err != nil {
-			fmt.Println("err: ", err.Error())
+			st_logger.WriteLogMessage(st_logger.ERROR, "error while receiving name from sentinel:", err.Error())
 			if !is_client_closed {
 				c.get_master_address_by_name_reply <- &Get_master_addr_reply{
 					reply: "",
@@ -116,6 +116,10 @@ func (c *Sentinel_connection) retrieveAddressByDbName() {
 					reply: "",
 					err:   errors.New("failed to connect to any of the sentinel services"),
 				}
+			} else {
+				st_logger.WriteLogMessage(st_logger.INFO, "reconnected successfully")
+				go c.retrieveAddressByDbName()
+				c.GetAddressByDbName(db_name)
 			}
 			continue
 		}
@@ -128,7 +132,6 @@ func (c *Sentinel_connection) retrieveAddressByDbName() {
 
 func (c *Sentinel_connection) reconnectToSentinel() bool {
 	for _, sentinelAddr := range c.sentinels_addresses {
-
 		if c.current_sentinel_connection != nil {
 			c.current_sentinel_connection.Close()
 			c.reader = nil
@@ -141,9 +144,12 @@ func (c *Sentinel_connection) reconnectToSentinel() bool {
 		if err == nil {
 			c.reader = bufio.NewReader(c.current_sentinel_connection)
 			c.writer = bufio.NewWriter(c.current_sentinel_connection)
+
+			st_logger.WriteLogMessage(st_logger.DEBUG, "connected to sentinel:", sentinelAddr)
+
 			return true
 		}
-		fmt.Println(err.Error())
+		st_logger.WriteLogMessage(st_logger.ERROR, "error reconnect to sentinel:", err.Error())
 	}
 	return false
 }

@@ -104,7 +104,7 @@ func handleSigleDbConnections(listening_port string, db_name string,
 		if err != nil {
 			st_logger.WriteLogMessage(st_logger.FATAL, "cannot accept connections on port ",
 				listening_port, err.Error())
-			return
+			continue
 		}
 		go handleConnection(conn, db_name, get_db_address_by_name)
 	}
