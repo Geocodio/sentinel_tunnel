@@ -72,6 +72,9 @@ func (c *Sentinel_connection) parseResponse() (request []string, err error, is_c
 }
 
 func (c *Sentinel_connection) getMasterAddrByNameFromSentinel(db_name string) (addr []string, returned_err error, is_client_closed bool) {
+	if c.writer == nil {
+		return nil, errors.New("all sentinels failed"), true
+	}
 	strs := []string{
 		"*3\r\n",
 		"$8\r\n",
