@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/DivPro/sentinel_tunnel/cmd/config"
-	"github.com/DivPro/sentinel_tunnel/cmd/resolver"
-	"github.com/DivPro/sentinel_tunnel/cmd/server"
+	"github.com/Geocodio/sentinel_tunnel/cmd/config"
+	"github.com/Geocodio/sentinel_tunnel/cmd/resolver"
+	"github.com/Geocodio/sentinel_tunnel/cmd/server"
 	"github.com/rs/zerolog/log"
 	"os"
 )
@@ -25,7 +25,7 @@ func main() {
 		log.Fatal().Err(err).Msg("connect to sentinels")
 	}
 	srv := server.NewServer(
-		resolver.NewResolver(sentinels),
+		resolver.NewResolver(sentinels, conf.ReplaceIpAddress),
 		conf.Databases,
 	)
 	go func() {

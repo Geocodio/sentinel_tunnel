@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Sentinels []string          `json:"sentinels"`
 	Databases []*DatabaseConfig `json:"databases"`
+	ReplaceIpAddress bool		`json:"replaceIpAddress"`
 }
 
 type DatabaseConfig struct {
@@ -24,7 +25,9 @@ func CreateFromFile(path string) (*Config, error) {
 		return nil, err
 	}
 
-	conf := &Config{}
+	conf := &Config{
+		ReplaceIpAddress: false,
+	}
 	err = json.Unmarshal(b, conf)
 	if err != nil {
 		log.Error().Err(err).Msgf("parse config file: %s", path)

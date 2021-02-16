@@ -59,7 +59,8 @@ For example, the following config file contains two Sentinel addresses and two d
       "name": "my_redis_master2",
       "port": 36382
     }
-  ]
+  ],
+  "replaceIpAddress": false
 }
 ```
 

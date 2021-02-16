@@ -2,8 +2,8 @@ package server
 
 import (
 	"fmt"
-	"github.com/DivPro/sentinel_tunnel/cmd/config"
-	"github.com/DivPro/sentinel_tunnel/cmd/resolver"
+	"github.com/Geocodio/sentinel_tunnel/cmd/config"
+	"github.com/Geocodio/sentinel_tunnel/cmd/resolver"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	"io"

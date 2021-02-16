@@ -13,10 +13,14 @@ type Resolver interface {
 
 type resolver struct {
 	sentinels []*redis.SentinelClient
+	replaceIpAddress bool
 }
 
-func NewResolver(sentinels []*redis.SentinelClient) Resolver {
-	return &resolver{sentinels: sentinels}
+func NewResolver(sentinels []*redis.SentinelClient, replaceIpAddress bool) Resolver {
+	return &resolver{
+		sentinels: sentinels,
+		replaceIpAddress: replaceIpAddress,
+	}
 }
 
 func (r *resolver) Resolve(dbName string) (string, error) {
@@ -29,6 +33,12 @@ func (r *resolver) Resolve(dbName string) (string, error) {
 		ip := strings.Join(result, ":")
 
 		log.Info().Msgf("'%s' resolved to master: %s", dbName, ip)
+
+		if r.replaceIpAddress {
+			ip = strings.Replace(ip, "192.168.1", "192.168.2", 1)
+
+			log.Info().Msgf("'%s' resolved to master (after IP Address replacement): %s", dbName, ip)
+		}
 
 		return ip, nil
 	}
